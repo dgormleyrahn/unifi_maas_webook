@@ -1,0 +1,127 @@
+---
+- name: Install UniFi PoE Webhook Service
+  hosts: all
+  become: yes
+  vars:
+    service_user: "{{ webhook_service_user | default('unifi-webhook') }}"
+    service_group: "{{ webhook_service_group | default('unifi-webhook') }}"
+    install_dir: "{{ webhook_install_dir | default('/opt/unifi-webhook') }}"
+    venv_dir: "{{ install_dir }}/venv"
+    service_name: unifi-webhook
+    python_executable: "{{ ansible_python_interpreter | default('python3') }}"
+
+  tasks:
+    - name: Install required system packages
+      package:
+        name:
+          - python3
+          - python3-pip
+          - python3-venv
+        state: present
+
+    - name: Create service group
+      group:
+        name: "{{ service_group }}"
+        system: yes
+        state: present
+
+    - name: Create service user
+      user:
+        name: "{{ service_user }}"
+        group: "{{ service_group }}"
+        system: yes
+        shell: /bin/false
+        home: "{{ install_dir }}"
+        create_home: no
+        state: present
+
+    - name: Create installation directory
+      file:
+        path: "{{ install_dir }}"
+        state: directory
+        owner: "{{ service_user }}"
+        group: "{{ service_group }}"
+        mode: '0755'
+
+    - name: Create Python virtual environment
+      command: "{{ python_executable }} -m venv {{ venv_dir }}"
+      args:
+        creates: "{{ venv_dir }}/bin/activate"
+
+    - name: Set ownership of virtual environment
+      file:
+        path: "{{ venv_dir }}"
+        owner: "{{ service_user }}"
+        group: "{{ service_group }}"
+        recurse: yes
+
+    - name: Copy application files
+      copy:
+        src: "{{ item }}"
+        dest: "{{ install_dir }}/{{ item }}"
+        owner: "{{ service_user }}"
+        group: "{{ service_group }}"
+        mode: '0644'
+      loop:
+        - unifi_webhook_server.py
+        - requirements.txt
+        - config.json
+      notify: restart webhook service
+
+    - name: Make webhook server executable
+      file:
+        path: "{{ install_dir }}/unifi_webhook_server.py"
+        mode: '0755'
+
+    - name: Install Python dependencies in virtual environment
+      pip:
+        requirements: "{{ install_dir }}/requirements.txt"
+        virtualenv: "{{ venv_dir }}"
+        virtualenv_command: "{{ python_executable }} -m venv"
+
+    - name: Create .env file from template
+      template:
+        src: env.j2
+        dest: "{{ install_dir }}/.env"
+        owner: "{{ service_user }}"
+        group: "{{ service_group }}"
+        mode: '0600'
+      when: webhook_env_vars is defined
+      notify: restart webhook service
+
+    - name: Install systemd service file
+      template:
+        src: unifi-webhook.service.j2
+        dest: /etc/systemd/system/{{ service_name }}.service
+        owner: root
+        group: root
+        mode: '0644'
+      notify:
+        - reload systemd
+        - restart webhook service
+
+    - name: Enable and start webhook service
+      systemd:
+        name: "{{ service_name }}"
+        enabled: yes
+        state: started
+        daemon_reload: yes
+
+    - name: Check service status
+      systemd:
+        name: "{{ service_name }}"
+      register: service_status
+
+    - name: Display service status
+      debug:
+        msg: "UniFi Webhook Service is {{ service_status.status.ActiveState }}"
+
+  handlers:
+    - name: reload systemd
+      systemd:
+        daemon_reload: yes
+
+    - name: restart webhook service
+      systemd:
+        name: "{{ service_name }}"
+        state: restarted

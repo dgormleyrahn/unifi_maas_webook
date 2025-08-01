@@ -1,0 +1,18 @@
+# Example configuration variables for webhook servers
+# Copy this file to group_vars/webhook_servers.yml and customize
+
+# Service configuration
+webhook_service_user: unifi-webhook
+webhook_service_group: unifi-webhook
+webhook_install_dir: /opt/unifi-webhook
+
+# Environment variables for the service
+webhook_env_vars:
+  unifi_api_key: "your-unifi-api-key-here"
+  unifi_base_url: "https://10.0.1.1/proxy/network/integration/v1"
+  unifi_site_id: "your-site-id-here"
+  unifi_device_id: "your-device-id-here"
+  webhook_auth_token: "your-secure-webhook-token-here"
+
+# Optional: Override Python interpreter if needed
+# ansible_python_interpreter: /usr/bin/python3

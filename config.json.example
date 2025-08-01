@@ -1,0 +1,36 @@
+{
+  "unifi": {
+    "api_key": "your-api-key-here",
+    "base_url": "https://your-controller-ip/proxy/network/integration/v1",
+    "site_id": "your-site-id-here",
+    "device_id": "your-switch-device-id-here"
+  },
+  "ports": {
+    "1": {
+      "name": "pi-node-1",
+      "ip": "192.168.1.101",
+      "description": "Primary Raspberry Pi"
+    },
+    "2": {
+      "name": "pi-node-2", 
+      "ip": "192.168.1.102",
+      "description": "Secondary Raspberry Pi"
+    },
+    "3": {
+      "name": "pi-node-3",
+      "ip": "192.168.1.103", 
+      "description": "Development Pi"
+    },
+    "4": {
+      "name": "pi-node-4",
+      "ip": "192.168.1.104",
+      "description": "Testing Pi"
+    }
+  },
+  "webhook": {
+    "port": 5000,
+    "host": "0.0.0.0",
+    "auth_token": "your-secure-webhook-token-change-this",
+    "power_cycle_delay": 3
+  }
+}

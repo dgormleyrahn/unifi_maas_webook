@@ -1,0 +1,9 @@
+[webhook_servers]
+# Example servers - replace with your actual server IPs/hostnames
+192.168.1.100 ansible_user=ubuntu
+192.168.1.101 ansible_user=ubuntu ansible_python_interpreter=/usr/bin/python3
+webhook-server.example.com ansible_user=debian
+
+[webhook_servers:vars]
+# Common variables for all webhook servers
+ansible_ssh_common_args='-o StrictHostKeyChecking=no'

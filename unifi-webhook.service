@@ -1,0 +1,27 @@
+[Unit]
+Description=UniFi PoE Webhook Power Management Server
+After=network.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/unifi-webhook
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/usr/bin/python3 /home/pi/unifi-webhook/unifi_webhook_server.py
+Restart=always
+RestartSec=10
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=unifi-webhook
+
+# Security
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/home/pi/unifi-webhook
+
+[Install]
+WantedBy=multi-user.target
